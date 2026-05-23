@@ -1,0 +1,37 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+.rsconnect/
+
+# Data files (large)
+data/raw/*.csv
+data/processed/*.csv
+
+# Results
+results/figures/*.pdf
+results/figures/*.png
+results/reports/*.html
+results/reports/*.md
+results/tables/
+
+# Logs
+logs/*.txt
+
+# R package check
+*.tar.gz
+*.Rcheck/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!results/figures/.gitkeep
+!results/reports/.gitkeep
+!results/tables/.gitkeep
+!logs/.gitkeep

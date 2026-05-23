@@ -1,0 +1,216 @@
+# =============================================================================
+# Empirical Network-Constrained Synthetic Dependency Prioritization
+# Configuration File — Single source of truth for all parameters
+# =============================================================================
+
+# ===== I/O Paths =====
+paths:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  results_dir: "results"
+  tables_dir: "results/tables"
+  figures_dir: "results/figures"
+  reports_dir: "results/reports"
+  log_dir: "logs"
+  log_file: "logs/run_log.txt"
+
+input_files:
+  mutation_matrix: "data/raw/mutation_matrix.csv"
+  dependency_matrix: "data/raw/dependency_matrix.csv"
+  expression_matrix: "data/raw/expression_matrix.csv"
+  sample_metadata: "data/raw/sample_metadata.csv"
+  string_edges: "data/raw/STRING_edges.csv"
+  reactome_pathway: "data/raw/Reactome_gene_pathway.csv"
+  omnipath_edges: "data/raw/OmniPath_edges.csv"
+  corum_complexes: "data/raw/CORUM_complexes.csv"
+  synlethdb_pairs: "data/raw/SynLethDB_pairs.csv"
+  druggable_targets: "data/raw/druggable_targets.csv"
+
+output_files:
+  association_results: "data/processed/association_results.csv"
+  candidate_pairs: "data/processed/candidate_pairs.csv"
+  network_features: "data/processed/network_features.csv"
+  empirical_features: "data/processed/empirical_features.csv"
+  final_ranked: "data/processed/final_ranked_candidates.csv"
+  permutation_results: "data/processed/permutation_results.csv"
+
+# ===== Data Preparation =====
+data_prep:
+  min_mut_count: 5
+  min_dependency_variance: 0.01
+  standardize_genes: true
+  force_uppercase: true
+  remove_self_pairs: true
+  sample_id_column: "sample_id"
+
+# ===== Association Analysis =====
+association:
+  min_mut_count: 5
+  covariates:
+    - "lineage"
+    - "TMB"
+    - "MSI_status"
+    - "CNV_burden"
+  use_expression_covariate: true
+  expression_covariate_name: "target_expression"
+  dependency_column_prefix: ""
+  fdr_method: "BH"
+  chunk_size: 50
+
+# ===== Candidate Filtering =====
+candidate_filtering:
+  fdr_threshold: 0.05
+  beta_direction: "negative"
+  min_n_mut: 5
+  min_abs_delta_dependency: 0.2
+
+# ===== Network Construction =====
+networks:
+  string:
+    score_cutoff: 700
+    remove_self_loops: true
+    remove_duplicate_edges: true
+    collapse_duplicates_by: "max_score"
+  signaling:
+    max_path_length: 5
+    remove_self_loops: true
+
+# ===== Network Features =====
+network_features:
+  max_path_length: 5
+  distance_score_map:
+    1: 1.0
+    2: 0.7
+    3: 0.4
+    4: 0.1
+    5: 0.1
+  path_confidence_method: "product"
+  hub_penalty_enabled: true
+
+# ===== Empirical Evidence =====
+empirical_evidence:
+  pathway:
+    exact_match_score: 1.0
+    parent_match_score: 0.5
+    no_match_score: 0.0
+  signaling:
+    direct_short_score: 1.0
+    reverse_short_score: 0.7
+    any_path_score: 0.5
+    no_path_score: 0.0
+    max_directed_length: 5
+    direct_short_max_len: 3
+  complex:
+    same_complex_score: 1.0
+    no_complex_score: 0.0
+  sl_prior:
+    known_pair_score: 1.0
+    neighbor_supported_score: 0.5
+    pathway_level_score: 0.3
+    no_evidence_score: 0.0
+    neighbor_search_depth: 1
+  drug:
+    fda_approved_score: 1.0
+    clinical_target_score: 0.8
+    preclinical_target_score: 0.7
+    druggable_class_score: 0.5
+    unknown_score: 0.0
+
+# ===== Scoring Weights =====
+scoring:
+  balanced:
+    stat_weight: 0.35
+    network_weight: 0.25
+    pathway_weight: 0.15
+    signaling_weight: 0.10
+    complex_weight: 0.05
+    sl_prior_weight: 0.05
+    drug_weight: 0.05
+  mechanism:
+    stat_weight: 0.30
+    network_weight: 0.30
+    pathway_weight: 0.20
+    signaling_weight: 0.10
+    complex_weight: 0.00
+    sl_prior_weight: 0.10
+    drug_weight: 0.00
+  therapeutic:
+    stat_weight: 0.30
+    network_weight: 0.20
+    pathway_weight: 0.15
+    signaling_weight: 0.10
+    complex_weight: 0.00
+    sl_prior_weight: 0.10
+    drug_weight: 0.15
+  default_scheme: "balanced"
+
+# ===== Evidence Classification =====
+classification:
+  class_I:
+    label: "Class I: high-confidence synthetic dependency candidate"
+    fdr_max: 0.05
+    beta_max: 0
+    network_distance_max: 2
+    pathway_score_min: 0.5
+    final_score_min: 0.75
+  class_II:
+    label: "Class II: network-supported candidate"
+    fdr_max: 0.05
+    beta_max: 0
+    network_distance_max: 3
+    final_score_min: 0.60
+  class_III:
+    label: "Class III: SL-prior-supported candidate"
+    fdr_max: 0.05
+    beta_max: 0
+    sl_prior_score_min: 0.01
+  class_IV:
+    label: "Class IV: statistical-only candidate"
+    fdr_max: 0.05
+    beta_max: 0
+    network_score_scaled_max: 0
+  low_priority:
+    label: "Low priority"
+
+# ===== Permutation Testing =====
+permutation:
+  enabled: true
+  n_perm: 1000
+  top_n_pairs: 200
+  match_on:
+    - "degree"
+  random_seed: 42
+
+# ===== Visualization =====
+visualization:
+  top_n_candidates: 30
+  dot_plot:
+    width: 10
+    height: 8
+  heatmap:
+    width: 12
+    height: 10
+  network_path_plot:
+    max_examples: 10
+    width: 8
+    height: 6
+
+# ===== Report =====
+report:
+  top_n_mechanism_cards: 30
+  output_format: "both"
+
+# ===== Simulation =====
+simulation:
+  n_samples: 500
+  n_mutation_genes: 200
+  n_dependency_genes: 300
+  n_true_sl_pairs: 50
+  n_pathway_terms: 80
+  n_complexes: 40
+  string_coverage: 0.85
+  mutation_rate_mean: 0.03
+  dependency_mean: -0.2
+  dependency_sd: 0.3
+  true_sl_effect_size: -0.4
+  random_seed: 42
